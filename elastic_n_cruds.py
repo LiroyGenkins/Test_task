@@ -1,4 +1,4 @@
-from elasticsearch import helpers, Elasticsearch, NotFoundError
+from elasticsearch import helpers, Elasticsearch
 import pandas as pd
 import model
 
@@ -11,6 +11,7 @@ class Elastic():
 
     def gendata(self):
         for i, row in self.reader.iterrows():
+            # Задание полей в эластике
             yield {
                 "_index": "post",
                 "_id": i,
@@ -28,16 +29,19 @@ class Elastic():
             print("Ошибка при работе с elastic", error)
 
     def search_by_text(self, text):
+        # Поиск в эластике по тексту
         result = self.es.search(index=self.index, body={"size": 20, "query": {"match": {'text': text}}})
         ids = [int(item["_id"]) for item in result["hits"]["hits"]]
         return ids
 
     def search_post(self, db, search_text):
+        # Запуск полнотекстового поиска и сортировка результатов
         ids = self.search_by_text(search_text)
         result =db.query(model.Post).filter(model.Post.id.in_(ids)).order_by(model.Post.created_date.desc()).all()
         return result
 
     def search_delete_by_id(self, id):
+        # поиск в индексе по id и удаление соответствующей записи
         result = self.es.search(index=self.index, body={"size": 1, "query": {"match": {'_id': id}}})
         if len(result['hits']['hits']) != 0:
             self.es.delete(index=self.index, id=id)
@@ -45,21 +49,10 @@ class Elastic():
         return False, 'ID не найден!'
 
     def delete_by_id(self, db, id):
+        # удаление из БД
         flag, item = self.search_delete_by_id(id)
+        db_result = False
         if flag:
             db_result = bool(db.query(model.Post).filter(model.Post.id == id).delete())
             db.commit()
         return 'Ok' if flag and db_result else item
-
-
-# Импортировал данные в Индекс Эластика используя add_to_index через cmd.
-# Обязательно проверьте запущен ли Elasticsearch через cmd или как сервис!
-# Полный код импорта через интепретатор Python:
-# from app.models import Docs
-# from app.elastic import add_to_index
-# for post in Docs.query.all():\
-#     add_to_index('docs', post)
-#
-# Удалить индекс из эластика:
-# from app import es
-# es.indices.delete(index='docs')

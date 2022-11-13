@@ -1,7 +1,5 @@
 elasticsearch==7.17.7
-elasticsearch_dsl
 uvicorn
 fastapi
 pandas
-psycopg2
 sqlalchemy
