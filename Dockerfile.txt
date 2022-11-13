@@ -1,0 +1,15 @@
+# our base image
+FROM python:3-onbuild
+
+# specify the port number the container should expose
+EXPOSE 5345
+WORKDIR /
+
+COPY requirements.txt requirements.txt
+RUN python -m venv venv
+RUN venv/bin/pip install -r requirements.txt
+
+
+
+# run the application
+CMD ["python", "./app.py"]
