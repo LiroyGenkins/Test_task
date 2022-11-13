@@ -12,4 +12,5 @@ RUN  python3.10 -m pip install --upgrade pip
 RUN  python3.10 -m pip install -r requirements.txt
 
 # run the application
+EXPOSE 8000
 ENTRYPOINT ["python", "main.py"]
