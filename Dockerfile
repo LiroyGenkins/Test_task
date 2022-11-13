@@ -8,8 +8,8 @@ COPY . /service/
 WORKDIR /service
 
 RUN python -m venv venv
-RUN venv/bin/pip install --upgrade pip
-RUN venv/bin/pip install -r requirements.txt
+RUN  python3.10 -m pip install --upgrade pip
+RUN  python3.10 -m pip install -r requirements.txt
 
 # run the application
 ENTRYPOINT ["python", "main.py"]
