@@ -3,7 +3,7 @@ from fastapi import Depends, FastAPI
 from sqlalchemy.orm import Session
 import time
 
-time.sleep(15)
+time.sleep(80)
 
 import model
 from elastic_n_cruds import Elastic
