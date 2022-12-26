@@ -3,14 +3,14 @@ import pandas as pd
 import model
 
 class Elastic():
-    def __init__(self):
-        self.es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
-        self.reader = pd.read_csv("posts.csv")
+    def __init__(self, host):
+        self.es = Elasticsearch([{'host': host, 'port': 9200}])
+        reader = pd.read_csv("posts.csv")
         self.index = "post"
-        self.csv_reader()
+        self.csv_reader(reader)
 
-    def gendata(self):
-        for i, row in self.reader.iterrows():
+    def gendata(self, reader):
+        for i, row in reader.iterrows():
             # Задание полей в эластике
             yield {
                 "_index": "post",
@@ -18,13 +18,13 @@ class Elastic():
                 "_source": {"text": row['text']}
             }
 
-    def csv_reader(self):
+    def csv_reader(self, reader):
         # Создание индекса в эластике
         try:
             if self.es.indices.exists(self.index):
                 self.es.indices.delete(index=self.index)
             self.es.indices.create(index=self.index)
-            helpers.bulk(self.es, self.gendata())
+            helpers.bulk(self.es, self.gendata(reader))
         except (Exception) as error:
             print("Ошибка при работе с elastic", error)
 
@@ -50,9 +50,11 @@ class Elastic():
 
     def delete_by_id(self, db, id):
         # удаление из БД
-        flag, item = self.search_delete_by_id(id)
-        db_result = False
-        if flag:
-            db_result = bool(db.query(model.Post).filter(model.Post.id == id).delete())
-            db.commit()
-        return 'Ok' if flag and db_result else item
+        db_result = bool(db.query(model.Post).filter(model.Post.id == id).delete())
+        if db_result:
+            flag, item = self.search_delete_by_id(id)
+            if flag:
+                db.commit()
+                return 'Ok'
+            return item
+        return 'Deleting from database failed'
